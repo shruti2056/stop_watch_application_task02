@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Colorful Stopwatch with Dark Mode & Sound</title>
+  <style>
+    :root {
+      --bg: #f0f8ff;
+      --card-bg: #ffffffcc;
+      --text: #333;
+      --lap-bg: #f1f1f1;
+    }
+
+    body.dark {
+      --bg: #1e1e2f;
+      --card-bg: #2c2c3a;
+      --text: #f0f0f0;
+      --lap-bg: #3a3a4a;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: background 0.3s ease;
+    }
+
+    .stopwatch {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      width: 300px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .time {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .buttons button {
+      font-size: 1rem;
+      padding: 0.6rem 1.3rem;
+      margin: 0.3rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      color: white;
+      transition: transform 0.2s ease, background-color 0.3s;
+    }
+
+    .buttons button:hover {
+      transform: scale(1.05);
+    }
+
+    .buttons button:nth-child(1) {
+      background-color: #28a745;
+    }
+
+    .buttons button:nth-child(2) {
+      background-color: #ffc107;
+      color: #222;
+    }
+
+    .buttons button:nth-child(3) {
+      background-color: #dc3545;
+    }
+
+    .buttons button:nth-child(4) {
+      background-color: #17a2b8;
+    }
+
+    .laps {
+      margin-top: 1rem;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: var(--lap-bg);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+      text-align: left;
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
+      color: var(--text);
+    }
+
+    .laps p {
+      margin: 0.3rem 0;
+      border-bottom: 1px dashed #ccc;
+      padding-bottom: 0.2rem;
+    }
+
+    .theme-toggle {
+      margin-top: 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stopwatch">
+    <div class="time" id="display">00:00:00</div>
+    <div class="buttons">
+      <button onclick="startStopwatch()">Start</button>
+      <button onclick="pauseStopwatch()">Pause</button>
+      <button onclick="resetStopwatch()">Reset</button>
+      <button onclick="recordLap()">Lap</button>
+    </div>
+    <div class="laps" id="laps"></div>
+    <div class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Dark Mode</div>
+  </div>
+
+  <!-- Click sound as base64 audio -->
+  <audio id="click-sound">
+    <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA..." type="audio/mp3">
+  </audio>
+
+  <script>
+    let startTime, elapsedTime = 0;
+    let interval;
+    let running = false;
+
+    const display = document.getElementById('display');
+    const laps = document.getElementById('laps');
+    const clickSound = document.getElementById('click-sound');
+
+    function playClick() {
+      clickSound.currentTime = 0;
+      clickSound.play();
+    }
+
+    function formatTime(ms) {
+      let totalSeconds = Math.floor(ms / 1000);
+      let minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      let seconds = String(totalSeconds % 60).padStart(2, '0');
+      let milliseconds = String(Math.floor((ms % 1000) / 10)).padStart(2, '0');
+      return `${minutes}:${seconds}:${milliseconds}`;
+    }
+
+    function updateDisplay() {
+      const now = Date.now();
+      const diff = now - startTime + elapsedTime;
+      display.textContent = formatTime(diff);
+    }
+
+    function startStopwatch() {
+      if (running) return;
+      playClick();
+      running = true;
+      startTime = Date.now();
+      interval = setInterval(updateDisplay, 10);
+    }
+
+    function pauseStopwatch() {
+      if (!running) return;
+      playClick();
+      running = false;
+      clearInterval(interval);
+      elapsedTime += Date.now() - startTime;
+    }
+
+    function resetStopwatch() {
+      playClick();
+      running = false;
+      clearInterval(interval);
+      elapsedTime = 0;
+      display.textContent = "00:00:00";
+      laps.innerHTML = "";
+    }
+
+    function recordLap() {
+      if (!running) return;
+      playClick();
+      const lapTime = display.textContent;
+      const lapElement = document.createElement('p');
+      lapElement.textContent = `Lap ${laps.childElementCount + 1}: ${lapTime}`;
+      laps.prepend(lapElement);
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      playClick();
+    }
+  </script>
+
+</body>
+</html>
